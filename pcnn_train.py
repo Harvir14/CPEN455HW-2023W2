@@ -128,6 +128,7 @@ if __name__ == '__main__':
 
     #set device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(device)
     kwargs = {'num_workers':0, 'pin_memory':True, 'drop_last':True}
 
     # set data
@@ -234,7 +235,7 @@ if __name__ == '__main__':
             for label in range(3):
                 sample_t = sample(model, label, args.sample_batch_size, args.obs, sample_op)
                 sample_t = rescaling_inv(sample_t)
-                save_images(sample_t, args.sample_dir)
+                save_images(sample_t, args.sample_dir, label)
                 sample_result = wandb.Image(sample_t, caption="epoch {}".format(epoch))
             
             gen_data_dir = args.sample_dir
