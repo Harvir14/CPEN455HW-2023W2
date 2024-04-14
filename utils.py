@@ -165,7 +165,6 @@ def log_prob_conditional_per_batch_elem(x, l):
     log_probs        = cond * log_cdf_plus + (1. - cond) * inner_out
     log_probs        = torch.sum(log_probs, dim=3) + log_prob_from_logits(logit_probs)
     
-    #I assumed log_prob is of shope B x H x W. May need to fix if it isn't
     return -torch.sum(log_sum_exp(log_probs), dim=(1,2))
 
 def to_one_hot(tensor, n, fill_with=1.):

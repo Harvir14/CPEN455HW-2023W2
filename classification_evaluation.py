@@ -28,10 +28,9 @@ def get_label(model, model_input, device):
         answer = model(model_input, labels, device)
         log_probs[label] = log_prob_conditional_per_batch_elem(model_input, answer)
 
-    classifications = torch.argmax(log_probs, dim=0) 
+    classifications = torch.argmax(log_probs, dim=0)
 
-    # I think classifications will be 1 x B, so need to squeeze first dim
-    return classifications.squeeze(0)
+    return classifications
 # End of your code
 
 def classifier(model, data_loader, device):
@@ -81,7 +80,7 @@ if __name__ == '__main__':
     model = model.to(device)
     #Attention: the path of the model is fixed to 'models/conditional_pixelcnn.pth'
     #You should save your model to this path
-    model.load_state_dict(torch.load('models/conditional_pixelcnn.pth'))
+    model.load_state_dict(torch.load('models/conditional_pixelcnn.pth', map_location=torch.device('cpu')))
     model.eval()
     print('model parameters loaded')
     acc = classifier(model = model, data_loader = dataloader, device = device)
