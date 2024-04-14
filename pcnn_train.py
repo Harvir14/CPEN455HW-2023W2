@@ -244,12 +244,12 @@ if __name__ == '__main__':
             try:
                 fid_score = calculate_fid_given_paths(paths, 32, device, dims=192)
                 print("Dimension {:d} works! fid score: {}".format(192, fid_score))
-                #TODO: fix this issue for colab
-                if args.en_wandb:
-                    wandb.log({"samples": sample_result,
-                                "FID": fid_score})
             except:
                 print("Dimension {:d} fails!".format(192))
+
+            if args.en_wandb:
+                    wandb.log({"samples": sample_result,
+                                "FID": fid_score})
         
         if (epoch + 1) % args.save_interval == 0: 
             if not os.path.exists("models"):
