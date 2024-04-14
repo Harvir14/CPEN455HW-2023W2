@@ -232,7 +232,7 @@ if __name__ == '__main__':
             print('......sampling......')
 
             # Sample over all classes
-            for label in range(3):
+            for label in range(4):
                 sample_t = sample(model, label, args.sample_batch_size, args.obs, sample_op)
                 sample_t = rescaling_inv(sample_t)
                 save_images(sample_t, args.sample_dir, label)
