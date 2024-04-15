@@ -168,10 +168,13 @@ class PixelCNN(nn.Module):
         positional_encoding = positional_encoding.permute(0,2,1)
         positional_encoding = positional_encoding.unsqueeze(3)
 
-        for j in range(len(ul_list)):
-            # Add positional encoding to encoding layer
-            ul_list[j] += positional_encoding
-            u_list[j] += positional_encoding
+        # for j in range(len(ul_list)):
+        #     # Add positional encoding to encoding layer
+        #     ul_list[j] += positional_encoding
+        #     u_list[j] += positional_encoding
+        
+        ul_list[-1] += positional_encoding
+        u_list[-1] += positional_encoding
 
         ###    DOWN PASS    ###
         u  = u_list.pop()
