@@ -83,9 +83,11 @@ class OneHotToEncoding(nn.Module):
         self.fc = nn.Linear(num_labels, image_size * image_size)
         self.num_labels = num_labels
         self.image_size = image_size
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     def forward(self, x):
         batch_size = x.size(0)
+        x = x.to(self.device)
         # Flatten the one-hot label vectors
         x = x.view(batch_size, -1)
         x = self.fc(x)
