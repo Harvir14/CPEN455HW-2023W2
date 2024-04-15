@@ -76,6 +76,23 @@ class AbsolutePositionalEncoding(nn.Module):
         """
         return out
 
+# Chat GPT
+class OneHotToEncoding(nn.Module):
+    def __init__(self, num_labels, image_size):
+        super(OneHotToEncoding, self).__init__()
+        self.fc = nn.Linear(num_labels, image_size * image_size)
+        self.num_labels = num_labels
+        self.image_size = image_size
+
+    def forward(self, x):
+        batch_size = x.size(0)
+        # Flatten the one-hot label vectors
+        x = x.view(batch_size, -1)
+        x = self.fc(x)
+        # Reshape to the desired output shape
+        x = x.view(batch_size, 1, self.image_size, self.image_size)
+        return x
+
 class PixelCNN(nn.Module):
     def __init__(self, nr_resnet=5, nr_filters=80, nr_logistic_mix=10,
                     resnet_nonlinearity='concat_elu', input_channels=3):
@@ -110,12 +127,12 @@ class PixelCNN(nn.Module):
         self.upsize_ul_stream = nn.ModuleList([down_right_shifted_deconv2d(nr_filters,
                                                     nr_filters, stride=(2,2)) for _ in range(2)])
 
-        self.u_init = down_shifted_conv2d(input_channels + 1, nr_filters, filter_size=(2,3),
+        self.u_init = down_shifted_conv2d(input_channels + 2, nr_filters, filter_size=(2,3),
                         shift_output_down=True)
 
-        self.ul_init = nn.ModuleList([down_shifted_conv2d(input_channels + 1, nr_filters,
+        self.ul_init = nn.ModuleList([down_shifted_conv2d(input_channels + 2, nr_filters,
                                             filter_size=(1,3), shift_output_down=True),
-                                       down_right_shifted_conv2d(input_channels + 1, nr_filters,
+                                       down_right_shifted_conv2d(input_channels + 2, nr_filters,
                                             filter_size=(2,1), shift_output_right=True)])
 
         num_mix = 3 if self.input_channels == 1 else 10
@@ -124,6 +141,7 @@ class PixelCNN(nn.Module):
 
         # Function used to generate label embeddings
         self.class_encoding = AbsolutePositionalEncoding(nr_filters)
+        self.label_encodings = OneHotToEncoding(4, 32)
 
 
     def forward(self, x, class_labels, sample=False):
@@ -140,7 +158,20 @@ class PixelCNN(nn.Module):
             x = torch.cat((x, padding), 1)
 
         ###      UP PASS    ###
+        # Fuse labels encodings with x
+        B, D, H, W = x.shape
+
+        class_embeddings = torch.zeros(B, 4)
+        for i in range(B):
+            # use D dimension for one-hot class label
+            class_embeddings[i][class_labels[i]] = 1
+
+        label_encoding = self.label_encodings(class_embeddings)
+
+        x = torch.cat((x, label_encoding), dim=1)
+
         x = x if sample else torch.cat((x, self.init_padding), 1)
+
         u_list  = [self.u_init(x)]
         ul_list = [self.ul_init[0](x) + self.ul_init[1](x)]
         for i in range(3):
