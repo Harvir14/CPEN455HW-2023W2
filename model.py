@@ -77,7 +77,7 @@ class AbsolutePositionalEncoding(nn.Module):
         return out
 
 class PixelCNN(nn.Module):
-    def __init__(self, nr_resnet=5, nr_filters=80, nr_logistic_mix=10,
+    def __init__(self, nr_resnet=5, nr_filters=40, nr_logistic_mix=10,
                     resnet_nonlinearity='concat_elu', input_channels=3):
         super(PixelCNN, self).__init__()
         if resnet_nonlinearity == 'concat_elu' :
@@ -91,24 +91,26 @@ class PixelCNN(nn.Module):
         self.right_shift_pad = nn.ZeroPad2d((1, 0, 0, 0))
         self.down_shift_pad  = nn.ZeroPad2d((0, 0, 1, 0))
 
+        filters = [nr_filters * (2 ** i) for i in range(3)]
+
         down_nr_resnet = [nr_resnet] + [nr_resnet + 1] * 2
-        self.down_layers = nn.ModuleList([PixelCNNLayer_down(down_nr_resnet[i], nr_filters,
+        self.down_layers = nn.ModuleList([PixelCNNLayer_down(down_nr_resnet[i], filters[2-i],
                                                 self.resnet_nonlinearity) for i in range(3)])
 
-        self.up_layers   = nn.ModuleList([PixelCNNLayer_up(nr_resnet, nr_filters,
-                                                self.resnet_nonlinearity) for _ in range(3)])
+        self.up_layers   = nn.ModuleList([PixelCNNLayer_up(nr_resnet, filters[i],
+                                                self.resnet_nonlinearity) for i in range(3)])
 
-        self.downsize_u_stream  = nn.ModuleList([down_shifted_conv2d(nr_filters, nr_filters,
-                                                    stride=(2,2)) for _ in range(2)])
+        self.downsize_u_stream  = nn.ModuleList([down_shifted_conv2d(filters[i], filters[i+1],
+                                                    stride=(2,2)) for i in range(2)])
 
-        self.downsize_ul_stream = nn.ModuleList([down_right_shifted_conv2d(nr_filters,
-                                                    nr_filters, stride=(2,2)) for _ in range(2)])
+        self.downsize_ul_stream = nn.ModuleList([down_right_shifted_conv2d(filters[i],
+                                                    filters[i+1], stride=(2,2)) for i in range(2)])
 
-        self.upsize_u_stream  = nn.ModuleList([down_shifted_deconv2d(nr_filters, nr_filters,
-                                                    stride=(2,2)) for _ in range(2)])
+        self.upsize_u_stream  = nn.ModuleList([down_shifted_deconv2d(filters[2-i], filters[1-i],
+                                                    stride=(2,2)) for i in range(2)])
 
-        self.upsize_ul_stream = nn.ModuleList([down_right_shifted_deconv2d(nr_filters,
-                                                    nr_filters, stride=(2,2)) for _ in range(2)])
+        self.upsize_ul_stream = nn.ModuleList([down_right_shifted_deconv2d(filters[2-i],
+                                                    filters[1-i], stride=(2,2)) for i in range(2)])
 
         self.u_init = down_shifted_conv2d(input_channels + 1, nr_filters, filter_size=(2,3),
                         shift_output_down=True)
@@ -123,7 +125,7 @@ class PixelCNN(nn.Module):
         self.init_padding = None
 
         # Function used to generate label embeddings
-        self.class_encoding = AbsolutePositionalEncoding(nr_filters)
+        self.class_encoding = AbsolutePositionalEncoding(filters[2])
 
 
     def forward(self, x, class_labels, sample=False):
@@ -155,7 +157,7 @@ class PixelCNN(nn.Module):
                 ul_list += [self.downsize_ul_stream[i](ul_list[-1])]
 
         # Fuse labels encodings after down pass 
-        B, D, H, W = ul_list[0].shape
+        B, D, H, W = ul_list[-1].shape
 
         class_embeddings = torch.zeros(B, 1, D)
         for i in range(B):
@@ -168,10 +170,14 @@ class PixelCNN(nn.Module):
         positional_encoding = positional_encoding.permute(0,2,1)
         positional_encoding = positional_encoding.unsqueeze(3)
 
-        for j in range(len(ul_list)):
-            # Add positional encoding to encoding layer
-            ul_list[j] += positional_encoding
-            u_list[j] += positional_encoding
+        # for j in range(len(ul_list)):
+        #     # Add positional encoding to encoding layer
+        #     ul_list[j] += positional_encoding
+        #     u_list[j] += positional_encoding
+        
+        # Add positional encoding to LAST encoding layer
+        ul_list[-1] += positional_encoding
+        u_list[-1] += positional_encoding
 
         ###    DOWN PASS    ###
         u  = u_list.pop()
