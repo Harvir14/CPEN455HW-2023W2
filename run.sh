@@ -5,7 +5,7 @@ python pcnn_train.py \
 --save_interval 25 \
 --dataset cpen455 \
 --nr_resnet 1 \
---nr_filters 10 \
+--nr_filters 20 \
 --nr_logistic_mix 5 \
 --lr_decay 0.999995 \
 --max_epochs 50 \
