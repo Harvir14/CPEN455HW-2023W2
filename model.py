@@ -129,12 +129,12 @@ class PixelCNN(nn.Module):
         self.upsize_ul_stream = nn.ModuleList([down_right_shifted_deconv2d(nr_filters,
                                                     nr_filters, stride=(2,2)) for _ in range(2)])
 
-        self.u_init = down_shifted_conv2d(input_channels + 2, nr_filters, filter_size=(2,3),
+        self.u_init = down_shifted_conv2d(input_channels + 1, nr_filters, filter_size=(2,3),
                         shift_output_down=True)
 
-        self.ul_init = nn.ModuleList([down_shifted_conv2d(input_channels + 2, nr_filters,
+        self.ul_init = nn.ModuleList([down_shifted_conv2d(input_channels + 1, nr_filters,
                                             filter_size=(1,3), shift_output_down=True),
-                                       down_right_shifted_conv2d(input_channels + 2, nr_filters,
+                                       down_right_shifted_conv2d(input_channels + 1, nr_filters,
                                             filter_size=(2,1), shift_output_right=True)])
 
         num_mix = 3 if self.input_channels == 1 else 10
@@ -170,7 +170,8 @@ class PixelCNN(nn.Module):
 
         label_encoding = self.label_encodings(class_embeddings)
 
-        x = torch.cat((x, label_encoding), dim=1)
+        # x = torch.cat((x, label_encoding), dim=1)
+        x += label_encoding
 
         x = x if sample else torch.cat((x, self.init_padding), 1)
 
