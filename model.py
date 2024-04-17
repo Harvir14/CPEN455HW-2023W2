@@ -179,6 +179,12 @@ class PixelCNN(nn.Module):
         ul_list[-1] += positional_encoding
         u_list[-1] += positional_encoding
 
+        ul_list[-2] += positional_encoding
+        u_list[-2] += positional_encoding
+
+        ul_list[-2] += positional_encoding
+        u_list[-2] += positional_encoding
+
         ###    DOWN PASS    ###
         u  = u_list.pop()
         ul = ul_list.pop()
