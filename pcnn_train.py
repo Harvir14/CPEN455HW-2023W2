@@ -12,6 +12,7 @@ from tqdm import tqdm
 from pprint import pprint
 import argparse
 from pytorch_fid.fid_score import calculate_fid_given_paths
+from classification_evaluation import classifier
 
 
 def train_or_test(model, data_loader, optimizer, loss_op, device, args, epoch, mode = 'training'):
@@ -48,6 +49,9 @@ def train_or_test(model, data_loader, optimizer, loss_op, device, args, epoch, m
         wandb.log({mode + "-epoch": epoch})
 
 if __name__ == '__main__':
+
+    os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
+
     parser = argparse.ArgumentParser()
     
     parser.add_argument('-w', '--en_wandb', type=bool, default=False,
@@ -111,7 +115,7 @@ if __name__ == '__main__':
         model_name = model_name + 'from_scratch'
         model_path = model_path + model_name + '/'
     
-    job_name = "PCNN_Training_" + "dataset:" + args.dataset + "_" + args.tag
+    job_name = "Scaling features, 3, 20, 10, add pos to last 3 layers"
     
     if args.en_wandb:
         # start a new wandb run to track this script
@@ -230,7 +234,6 @@ if __name__ == '__main__':
         
         if epoch % args.sampling_interval == 0:
             print('......sampling......')
-
             # Sample over all classes
             for label in range(4):
                 sample_t = sample(model, label, args.sample_batch_size, args.obs, sample_op)
@@ -247,9 +250,13 @@ if __name__ == '__main__':
             except:
                 print("Dimension {:d} fails!".format(192))
 
+            acc = classifier(model = model, data_loader = train_loader, device = device)
+            print(f"Accuracy: {acc}")
+
             if args.en_wandb:
                     wandb.log({"samples": sample_result,
                                 "FID": fid_score})
+                    wandb.log({"Training Accuracy": acc})     
         
         if (epoch + 1) % args.save_interval == 0: 
             if not os.path.exists("models"):
