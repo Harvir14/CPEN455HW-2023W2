@@ -261,6 +261,6 @@ if __name__ == '__main__':
         if (epoch + 1) % args.save_interval == 0: 
             if not os.path.exists("models"):
                 os.makedirs("models")
-            torch.save(model.state_dict(), 'models/{}_{}.pth'.format(model_name, epoch))
+            torch.save(model.state_dict(), '../gdrive/models/{}_{}.pth'.format(model_name, epoch))
     # Save completed model
     torch.save(model.state_dict(), 'models/conditional_pixelcnn.pth')
