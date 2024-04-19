@@ -69,9 +69,9 @@ if __name__ == '__main__':
                                              shuffle=False, 
                                              **kwargs)
 
-    model = PixelCNN(nr_resnet=2, nr_filters=40, input_channels=3, nr_logistic_mix=10)
+    model = PixelCNN(nr_resnet=1, nr_filters=100, input_channels=3, nr_logistic_mix=10)
     model = model.to(device)
-    model.load_state_dict(torch.load('models/pcnn_cpen455_from_scratch_99.pth'))
+    model.load_state_dict(torch.load('models/pcnn_cpen455_load_model_49.pth'))
     model.eval()
 
     output_csv = 'submission.csv'

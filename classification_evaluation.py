@@ -75,14 +75,14 @@ if __name__ == '__main__':
     #Write your code here
     #You should replace the random classifier with your trained model
     #Begin of your code
-    model = PixelCNN(nr_resnet=2, nr_filters=40, input_channels=3, nr_logistic_mix=10)
+    model = PixelCNN(nr_resnet=1, nr_filters=100, input_channels=3, nr_logistic_mix=10)
     #End of your code
     
     model = model.to(device)
     #Attention: the path of the model is fixed to 'models/conditional_pixelcnn.pth'
     #You should save your model to this path
     # model.load_state_dict(torch.load('models/conditional_pixelcnn.pth', map_location=torch.device('cpu')))
-    model.load_state_dict(torch.load('models/pcnn_cpen455_from_scratch_24.pth'))
+    model.load_state_dict(torch.load('models/pcnn_cpen455_load_model_49.pth'))
     model.eval()
     print('model parameters loaded')
     acc = classifier(model = model, data_loader = dataloader, device = device)

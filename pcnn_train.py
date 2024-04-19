@@ -115,7 +115,7 @@ if __name__ == '__main__':
         model_name = model_name + 'from_scratch'
         model_path = model_path + model_name + '/'
     
-    job_name = "Scaling features, 1, 100, 10, add pos to last 3 layers"
+    job_name = "Scaling features, 1, 100, 10, add pos to last 3 layers, full version"
     
     if args.en_wandb:
         # start a new wandb run to track this script
@@ -235,27 +235,27 @@ if __name__ == '__main__':
         if epoch % args.sampling_interval == 0:
             print('......sampling......')
             # Sample over all classes
-            for label in range(4):
-                sample_t = sample(model, label, args.sample_batch_size, args.obs, sample_op)
-                sample_t = rescaling_inv(sample_t)
-                save_images(sample_t, args.sample_dir, label)
-                sample_result = wandb.Image(sample_t, caption="epoch {}".format(epoch))
+            # for label in range(4):
+            #     sample_t = sample(model, label, args.sample_batch_size, args.obs, sample_op)
+            #     sample_t = rescaling_inv(sample_t)
+            #     save_images(sample_t, args.sample_dir, label)
+            #     sample_result = wandb.Image(sample_t, caption="epoch {}".format(epoch))
             
-            gen_data_dir = args.sample_dir
-            ref_data_dir = args.data_dir +'/test'
-            paths = [gen_data_dir, ref_data_dir]
-            try:
-                fid_score = calculate_fid_given_paths(paths, 32, device, dims=192)
-                print("Dimension {:d} works! fid score: {}".format(192, fid_score))
-            except:
-                print("Dimension {:d} fails!".format(192))
+            # gen_data_dir = args.sample_dir
+            # ref_data_dir = args.data_dir +'/test'
+            # paths = [gen_data_dir, ref_data_dir]
+            # try:
+            #     fid_score = calculate_fid_given_paths(paths, 32, device, dims=192)
+            #     print("Dimension {:d} works! fid score: {}".format(192, fid_score))
+            # except:
+            #     print("Dimension {:d} fails!".format(192))
 
             acc = classifier(model = model, data_loader = train_loader, device = device)
             print(f"Accuracy: {acc}")
 
             if args.en_wandb:
-                    wandb.log({"samples": sample_result,
-                                "FID": fid_score})
+                    # wandb.log({"samples": sample_result,
+                    #             "FID": fid_score})
                     wandb.log({"Training Accuracy": acc})     
         
         if (epoch + 1) % args.save_interval == 0: 
