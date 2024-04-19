@@ -115,7 +115,7 @@ if __name__ == '__main__':
         model_name = model_name + 'from_scratch'
         model_path = model_path + model_name + '/'
     
-    job_name = "Scaling features, 3, 20, 10, add pos to last 3 layers"
+    job_name = "Scaling features, 1, 100, 10, add pos to last 3 layers"
     
     if args.en_wandb:
         # start a new wandb run to track this script
@@ -261,6 +261,6 @@ if __name__ == '__main__':
         if (epoch + 1) % args.save_interval == 0: 
             if not os.path.exists("models"):
                 os.makedirs("models")
-            torch.save(model.state_dict(), '../gdrive/models/{}_{}.pth'.format(model_name, epoch))
+            torch.save(model.state_dict(), 'models/{}_{}.pth'.format(model_name, epoch))
     # Save completed model
     torch.save(model.state_dict(), 'models/conditional_pixelcnn.pth')
