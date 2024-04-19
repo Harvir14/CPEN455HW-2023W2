@@ -12,6 +12,7 @@ from tqdm import tqdm
 from pprint import pprint
 import argparse
 from pytorch_fid.fid_score import calculate_fid_given_paths
+from classification_evaluation import classifier
 
 
 def train_or_test(model, data_loader, optimizer, loss_op, device, args, epoch, mode = 'training'):
@@ -113,7 +114,7 @@ if __name__ == '__main__':
         model_name = model_name + 'from_scratch'
         model_path = model_path + model_name + '/'
     
-    job_name = "PCNN_Training_" + "dataset:" + args.dataset + "_" + args.tag
+    job_name = "APE middle, add all layers, 2, 20, 10"
     
     if args.en_wandb:
         # start a new wandb run to track this script
@@ -249,9 +250,13 @@ if __name__ == '__main__':
             except:
                 print("Dimension {:d} fails!".format(192))
 
+            acc = classifier(model = model, data_loader = train_loader, device = device)
+            print(f"Accuracy: {acc}")
+
             if args.en_wandb:
                     wandb.log({"samples": sample_result,
                                 "FID": fid_score})
+                    wandb.log({"Training Accuracy": acc})
         
         if (epoch + 1) % args.save_interval == 0: 
             if not os.path.exists("models"):
