@@ -68,11 +68,8 @@ class AbsolutePositionalEncoding(nn.Module):
         B, N, D = x.shape
 
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        out = torch.zeros_like(x).to(device)
-        for b in range(B):
-            out[b] = x[b].to(device) + self.W[label[b]].to(device)
 
-        # out = x.to(device) + self.W.to(device)[label]
+        out = x.to(device) + self.W.to(device)[0:N]
 
         """
         END BLOCK

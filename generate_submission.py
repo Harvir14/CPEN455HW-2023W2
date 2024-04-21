@@ -6,19 +6,30 @@ from tqdm import tqdm
 from pprint import pprint
 import argparse
 from classification_evaluation import get_label
+from classification_evaluation import get_label_and_logits
 import csv
 import numpy as np
 
-def classifier(model, data_loader, device):
+def get_classifications_and_logits(model, data_loader, device):
     model.eval()
     classifications = []
+    logits_list = []
     for batch_idx, item in enumerate(tqdm(data_loader)):
         model_input, _ = item
         model_input = model_input.to(device)
-        answer = get_label(model, model_input, device)
-        classifications.extend(answer.cpu().numpy().tolist())
+        preds, curr_logits = get_label_and_logits(model, model_input, device)
+        classifications.extend(preds.cpu().numpy().tolist())
+        logits_list.append(curr_logits.detach().numpy().T)
+
+    logits = np.empty((519, 4))
+
+    idx = 0
+    for i in range(len(logits_list)):
+        for j in range(logits_list[i].shape[0]):
+            logits[idx] = logits_list[i][j]
+            idx += 1
         
-    return classifications
+    return classifications, logits
 
 
 def get_file_names(test_csv):
@@ -36,7 +47,7 @@ def get_file_names(test_csv):
     return file_names
 
 
-def save_classifications_to_csv(classifications, file_names, output_csv):
+def save_classifications_to_csv(classifications, file_names, output_csv, fid):
     with open(output_csv, 'w', newline='') as csvfile:
 
         csv_writer = csv.writer(csvfile)
@@ -44,6 +55,9 @@ def save_classifications_to_csv(classifications, file_names, output_csv):
 
         for classification, id in zip(classifications, file_names):
             csv_writer.writerow([id, classification])
+
+        # Write FID to last row
+        csv_writer.writerow(['fid', fid])
         
 
 if __name__ == '__main__':
@@ -52,7 +66,7 @@ if __name__ == '__main__':
     parser.add_argument('-i', '--data_dir', type=str,
                         default='data', help='Location for the dataset')
     parser.add_argument('-b', '--batch_size', type=int,
-                        default=32, help='Batch size for inference')
+                        default=16, help='Batch size for inference')
     parser.add_argument('-m', '--mode', type=str,
                         default='test', help='Mode for the dataset')
     
@@ -71,13 +85,16 @@ if __name__ == '__main__':
 
     model = PixelCNN(nr_resnet=2, nr_filters=80, input_channels=3, nr_logistic_mix=10)
     model = model.to(device)
-    model.load_state_dict(torch.load('models/pcnn_cpen455_from_scratch_124.pth'))
+    model.load_state_dict(torch.load('models/conditional_pixelcnn.pth'))
     model.eval()
 
     output_csv = 'submission.csv'
     test_csv = 'data/test.csv'
 
-    classifications = classifier(model, dataloader, device)
+    classifications, logits = get_classifications_and_logits(model, dataloader, device)
+
+    np.save('logits.npy', logits)
+
     file_names = get_file_names(test_csv)
 
-    save_classifications_to_csv(classifications, file_names, output_csv)
+    save_classifications_to_csv(classifications, file_names, output_csv, 27.30727)

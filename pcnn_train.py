@@ -114,7 +114,7 @@ if __name__ == '__main__':
         model_name = model_name + 'from_scratch'
         model_path = model_path + model_name + '/'
     
-    job_name = "APE middle, add all layers, 2, 20, 10"
+    job_name = "APE middle, add all layers, 2, 80, 10"
     
     if args.en_wandb:
         # start a new wandb run to track this script
@@ -213,6 +213,9 @@ if __name__ == '__main__':
         
         # decrease learning rate
         scheduler.step()
+        
+        # Commented out because do not have test label
+
         # train_or_test(model = model,
         #               data_loader = test_loader,
         #               optimizer = optimizer,

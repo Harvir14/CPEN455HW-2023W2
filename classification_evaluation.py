@@ -33,6 +33,20 @@ def get_label(model, model_input, device):
     return classifications
 # End of your code
 
+def get_label_and_logits(model, model_input, device):
+    B, D, H, W = model_input.shape
+    log_probs = torch.zeros((NUM_CLASSES, B))
+
+    # label is the class label
+    for label in range(NUM_CLASSES):
+        labels = torch.full((B,), label)
+        answer = model(model_input, labels, device)
+        log_probs[label] = log_prob_conditional_per_batch_elem(model_input, answer)
+
+    classifications = torch.argmax(log_probs, dim=0).to(device)
+
+    return classifications, log_probs
+
 def classifier(model, data_loader, device):
     model.eval()
     acc_tracker = ratio_tracker()
@@ -82,7 +96,7 @@ if __name__ == '__main__':
     model = model.to(device)
     #Attention: the path of the model is fixed to 'models/conditional_pixelcnn.pth'
     #You should save your model to this path
-    model.load_state_dict(torch.load('models/pcnn_cpen455_from_scratch_124.pth', map_location=torch.device('cpu')))
+    model.load_state_dict(torch.load('models/conditional_pixelcnn.pth', map_location=torch.device('cpu')))
     model.eval()
     print('model parameters loaded')
     acc = classifier(model = model, data_loader = dataloader, device = device)
