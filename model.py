@@ -57,7 +57,7 @@ class AbsolutePositionalEncoding(nn.Module):
         self.W = nn.Parameter(torch.empty((self.MAX_LEN, d_model)))
         nn.init.normal_(self.W)
 
-    def forward(self, x, label):
+    def forward(self, x):
         """
         args:
             x: shape B x N x D
@@ -162,7 +162,7 @@ class PixelCNN(nn.Module):
             # use D dimension for one-hot class label
             class_embeddings[i][0][class_labels[i]] = 1
 
-        positional_encoding = self.class_encoding(class_embeddings, class_labels)
+        positional_encoding = self.class_encoding(class_embeddings)
 
         # Make positional_encoding B x D x 1 x 1
         positional_encoding = positional_encoding.permute(0,2,1)
